@@ -1,4 +1,5 @@
-var crypto = require('crypto');
+var crypto = require('crypto'),
+    Post = require('../models/func.js');
 
 module.exports = function(app) {
     app.get('/', function (req, res) {
@@ -8,9 +9,18 @@ module.exports = function(app) {
         res.end(JSON.stringify(data));
     });
 
-    app.get('/reg', checkNotLogin);
-    app.get('/reg', function (req, res) {
-
+    app.post('/save/func', checkNotLogin);
+    app.post('/save/func', function (req, res) {
+        console.log(req.body);
+        var post = new Post(currentUser.name, req.body.title, req.body.post);
+        post.save(function (err) {
+            if (err) {
+                req.flash('error', err);
+                return res.redirect('/');
+            }
+            req.flash('success', '保存成功');
+            res.end();
+        });
     });
 
     app.post('/reg', checkNotLogin);
