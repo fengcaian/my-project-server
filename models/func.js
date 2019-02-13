@@ -1,17 +1,18 @@
 var mongodb = require('./db');
 
-function Post(name, title, post) {
-    this.name = name;
-    this.title = title;
-    this.post = post;
+function Func(func) {
+    this.name = func.funcName;
+    this.urlList = func.urlList;
+    this.desc = func.desc;
 }
 
-module.exports = Post;
+module.exports = Func;
  // 存储一篇文章及其信息
-Post.prototype.save = function (callback) {
+Func.prototype.save = function (callback) {
     var date = new Date();
+    var timestamp = Date.parse(date);
     var time = {
-        data: date,
+        date: date,
         year: date.getFullYear(),
         month: date.getFullYear() + "-" + (date.getMonth() + 1),
         day: date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate(),
@@ -19,11 +20,12 @@ Post.prototype.save = function (callback) {
         date.getHours() + ":" + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes())
     };
 
-    var post = { // 要存储的文档
+    var func = { // 要存储的文档
+        id: 'func_id_' + timestamp,
         name: this.name,
-        title: this.title,
-        post: this.post,
-        time: time
+        urlList: this.urlList,
+        desc: this.desc,
+        time: time,
     };
 
     // 打开数据库
@@ -32,13 +34,13 @@ Post.prototype.save = function (callback) {
             return callback(err);
         }
         // 读取post集合
-        db.collection('posts', function (err, collection) {
+        db.collection('funcs', function (err, collection) {
             if (err) {
                 mongodb.clone();
                 return callback(err);
             }
             // 将文档插入post集合
-            collection.insert(post, {
+            collection.insert(func, {
                 safe: true
             }, function (err) {
                 mongodb.close();
@@ -51,13 +53,13 @@ Post.prototype.save = function (callback) {
   })
 };
 
-Post.get = function (name, callback) {
+Func.get = function (name, callback) {
     mongodb.open(function (err, db) {
         if (err) {
             return callback(err);
         }
-        // 读取posts集合
-        db.collection('posts', function (err, collection) {
+        // 读取funcs集合
+        db.collection('funcs', function (err, collection) {
             if (err) {
                 mongodb.close();
                 return callback(err);

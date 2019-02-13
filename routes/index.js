@@ -1,19 +1,20 @@
 var crypto = require('crypto'),
-    Post = require('../models/func.js');
+    Func = require('../models/func.js');
 
 module.exports = function(app) {
     app.get('/', function (req, res) {
         console.log(123);
         var data = {key: 'value', hello: 'world'};
         res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify(data));
+        res.send(JSON.stringify(data));
+        res.end();
     });
 
     app.post('/save/func', checkNotLogin);
     app.post('/save/func', function (req, res) {
         console.log(req.body);
-        var post = new Post(currentUser.name, req.body.title, req.body.post);
-        post.save(function (err) {
+        var func = new Func(req.body);
+        func.save(function (err) {
             if (err) {
                 req.flash('error', err);
                 return res.redirect('/');
@@ -23,8 +24,9 @@ module.exports = function(app) {
         });
     });
 
-    app.post('/reg', checkNotLogin);
-    app.post('/reg', function (req, res) {
+    app.get('/get/func/list', checkNotLogin);
+    app.get('/get/func/list', function (req, res) {
+        Func.get();
         req.flash('error', '两次输入的密码不一致!');
     });
 
