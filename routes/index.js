@@ -26,7 +26,9 @@ module.exports = function(app) {
 
     app.get('/get/func/list', checkNotLogin);
     app.get('/get/func/list', function (req, res) {
-        Func.get();
+        Func.get(null, function (err, func) {
+            console.log(func);
+        });
         req.flash('error', '两次输入的密码不一致!');
     });
 
