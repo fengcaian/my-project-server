@@ -2,8 +2,9 @@ var mongodb = require('./db');
 
 function Func(func) {
     this.name = func.funcName;
+    this.key = func.funcKey;
     this.urlList = func.urlList;
-    this.desc = func.desc;
+    this.desc = func.funcDesc;
 }
 
 module.exports = Func;
@@ -23,9 +24,10 @@ Func.prototype.save = function (callback) {
     var func = { // 要存储的文档
         id: 'func_id_' + timestamp,
         name: this.name,
+        key: this.key,
         urlList: this.urlList,
         desc: this.desc,
-        time: time,
+        time: time
     };
 
     // 打开数据库
@@ -53,7 +55,7 @@ Func.prototype.save = function (callback) {
   })
 };
 
-Func.get = function (name, callback) {
+Func.get = function (params, callback) {
     mongodb.open(function (err, db) {
         if (err) {
             return callback(err);
@@ -65,13 +67,27 @@ Func.get = function (name, callback) {
                 return callback(err);
             }
             var query = {};
-            if (name) {
-                query.name = name
+            if (params.keyWord) {
+                query.$or = [
+                    {
+                        name: params.keyWord
+                    },
+                    {
+                        key: params.keyWord
+                    },
+                    {
+                        desc: params.keyWord
+                    }
+                ];
             }
             // 根据query对象查询文章
-            collection.find(query).sort({
-                time: -1
-            }).toArray(function (err, docs) {
+            collection.find(query)
+                .sort({
+                    time: -1
+                })
+                .skip(Number(params.pageSize) * Number(params.currentPage)
+                .limit(Number(params.pageSize))
+                .toArray(function (err, docs) {
                 mongodb.close();
                 if (err) {
                     callback(err);

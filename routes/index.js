@@ -1,5 +1,7 @@
 var crypto = require('crypto'),
-    Func = require('../models/func.js');
+    url = require('url'),
+    Func = require('../models/func.js'),
+    Response = require('../utils/Response.js');
 
 module.exports = function(app) {
     app.get('/', function (req, res) {
@@ -26,10 +28,15 @@ module.exports = function(app) {
 
     app.get('/get/func/list', checkNotLogin);
     app.get('/get/func/list', function (req, res) {
-        Func.get(null, function (err, func) {
-            console.log(func);
+        var reqParams = url.parse(req.url, true).query;
+        Func.get(reqParams, function (err, func) {
+            if (err) {
+                console.log(err);
+                res.end();
+            }
+            var totalRow = func ? func.length : 0;
+            res.end(JSON.stringify(new Response(200, '', func, totalRow, reqParams.pageSize, reqParams.currentPage)));
         });
-        req.flash('error', '两次输入的密码不一致!');
     });
 
     app.get('/login', checkNotLogin);
