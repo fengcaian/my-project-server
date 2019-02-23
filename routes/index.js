@@ -29,13 +29,12 @@ module.exports = function(app) {
     app.get('/get/func/list', checkNotLogin);
     app.get('/get/func/list', function (req, res) {
         var reqParams = url.parse(req.url, true).query;
-        Func.get(reqParams, function (err, func) {
+        Func.get(reqParams, function (err, result) {
             if (err) {
                 console.log(err);
-                res.end();
+                res.end(err);
             }
-            var totalRow = func ? func.length : 0;
-            res.end(JSON.stringify(new Response(200, '', func, totalRow, reqParams.pageSize, reqParams.currentPage)));
+            res.end(JSON.stringify(new Response(200, '', result.dataList, result.totalRow, reqParams.pageSize, reqParams.currentPage)));
         });
     });
 

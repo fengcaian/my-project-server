@@ -5,6 +5,7 @@ function Func(func) {
     this.key = func.funcKey;
     this.urlList = func.urlList;
     this.desc = func.funcDesc;
+    this.parentId = func.parentId;
 }
 
 module.exports = Func;
@@ -27,7 +28,8 @@ Func.prototype.save = function (callback) {
         key: this.key,
         urlList: this.urlList,
         desc: this.desc,
-        time: time
+        time: time,
+        parentId: this.parentId
     };
 
     // 打开数据库
@@ -38,19 +40,39 @@ Func.prototype.save = function (callback) {
         // 读取post集合
         db.collection('funcs', function (err, collection) {
             if (err) {
-                mongodb.clone();
+                mongodb.close();
                 return callback(err);
             }
-            // 将文档插入post集合
-            collection.insert(func, {
-                safe: true
-            }, function (err) {
-                mongodb.close();
-                if (err) {
-                    return callback(err);
-                }
-                callback(null);
+            new Promise(function (resolve, reject) {
+                collection
+                    .find()
+                    .sort({id: -1})
+                    .toArray(function (err, docs) {
+                        if (err) {
+                            reject(err);
+                        }
+                        console.log(docs);
+                        resolve(docs);
+                    })
             })
+            .then((res) => {
+                if (res.length) {
+                    func.id = res[0].id + 1;
+                } else {
+                    func.id = 1;
+                }
+                // 将文档插入post集合
+                collection
+                    .insert(func, {
+                        safe: true
+                    }, function (err) {
+                        mongodb.close();
+                        if (err) {
+                            return callback(err);
+                        }
+                        callback(null, '保存成功！');
+                    });
+            });
         })
   })
 };
@@ -80,20 +102,43 @@ Func.get = function (params, callback) {
                     }
                 ];
             }
+            Promise.all(
+                [
+                    collection.count(true),
+                    collection.find(query)
+                        .sort({
+                            time: -1
+                        })
+                        .skip(Number(params.currentPage))
+                        .limit(Number(params.pageSize))
+                        .toArray()
+            ]).then((res) => {
+                console.log(res);
+                callback(null, {
+                    totalRow: res[0],
+                    dataList: res[1]
+                });
+            }, (err) => {
+                callback(err);
+            }).finally(() => {
+                mongodb.close();
+            });
             // 根据query对象查询文章
+            /*console.log(Number(params.pageSize));
             collection.find(query)
                 .sort({
-                    time: -1
+                    _id: -1
                 })
-                .skip(Number(params.pageSize) * Number(params.currentPage)
+                .skip(2)
                 .limit(Number(params.pageSize))
                 .toArray(function (err, docs) {
                 mongodb.close();
                 if (err) {
                     callback(err);
                 }
+                console.log(docs);
                 callback(null, docs);
-            })
+            });*/
         })
     })
 };
