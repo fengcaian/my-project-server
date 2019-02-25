@@ -107,21 +107,20 @@ Func.get = function (params, callback) {
                     collection.count(true),
                     collection.find(query)
                         .sort({
-                            time: -1
+                            id: -1
                         })
                         .skip(Number(params.currentPage))
                         .limit(Number(params.pageSize))
                         .toArray()
             ]).then((res) => {
-                console.log(res);
+                mongodb.close();
                 callback(null, {
                     totalRow: res[0],
                     dataList: res[1]
                 });
             }, (err) => {
-                callback(err);
-            }).finally(() => {
                 mongodb.close();
+                callback(err);
             });
             // 根据query对象查询文章
             /*console.log(Number(params.pageSize));
@@ -141,4 +140,28 @@ Func.get = function (params, callback) {
             });*/
         })
     })
+};
+Func.getAll = function (params, callback) {
+    mongodb.open(function (err, db) {
+        if (err) {
+            return callback(err);
+        }
+        db.collection('funcs', function (err, collection) {
+            if (err) {
+                mongodb.close();
+                return callback(err);
+            }
+            collection.find()
+                .sort({
+                    id: -1,
+                })
+                .toArray(function (err, docs) {
+                    mongodb.close();
+                    if (err) {
+                        callback(err);
+                    }
+                    callback(null, docs);
+                });
+        });
+    });
 };

@@ -38,6 +38,17 @@ module.exports = function(app) {
         });
     });
 
+    app.get('/get/func/tree/list', checkNotLogin);
+    app.get('/get/func/tree/list', function (req, res) {
+        Func.getAll(null, function (err, result) {
+            if (err) {
+                console.log(err);
+                res.end(err);
+            }
+            res.end(JSON.stringify(new Response(200, '', result.dataList, result.totalRow, reqParams.pageSize, reqParams.currentPage)));
+        });
+    });
+
     app.get('/login', checkNotLogin);
     app.get('/login', function (req, res) {
     });
