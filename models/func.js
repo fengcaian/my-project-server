@@ -1,19 +1,21 @@
-var mongodb = require('./db');
+const mongodb = require('./db');
 
-function Func(func) {
-    this.name = func.funcName;
-    this.key = func.funcKey;
+function Func (func) {
+    this.funcName = func.funcName;
+    this.funcKey = func.funcKey;
     this.urlList = func.urlList;
-    this.desc = func.funcDesc;
+    this.funcDesc = func.funcDesc;
     this.parentId = func.parentId;
+    this._id = func._id;
+    this.uuid = func.uuid;
 }
 
 module.exports = Func;
  // 存储一篇文章及其信息
-Func.prototype.save = function (callback) {
-    var date = new Date();
-    var timestamp = Date.parse(date);
-    var time = {
+Func.prototype.save = function(callback) {
+    const date = new Date();
+    const timestamp = Date.parse(date);
+    const time = {
         date: date,
         year: date.getFullYear(),
         month: date.getFullYear() + "-" + (date.getMonth() + 1),
@@ -22,40 +24,35 @@ Func.prototype.save = function (callback) {
         date.getHours() + ":" + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes())
     };
 
-    var func = { // 要存储的文档
+    const func = { // 要存储的文档
         id: 'func_id_' + timestamp,
-        name: this.name,
-        key: this.key,
+        funcName: this.funcName,
+        funcKey: this.funcKey,
         urlList: this.urlList,
-        desc: this.desc,
+        funcDesc: this.funcDesc,
         time: time,
         parentId: this.parentId
     };
 
     // 打开数据库
-    mongodb.open(function (err, db) {
-        if (err) {
-            return callback(err);
-        }
+    mongodb.then(function(db) {
         // 读取post集合
-        db.collection('funcs', function (err, collection) {
+        db.collection('funcs', function(err, collection) {
             if (err) {
-                mongodb.close();
                 return callback(err);
             }
-            new Promise(function (resolve, reject) {
+            new Promise(function(resolve, reject) {
                 collection
                     .find()
                     .sort({id: -1})
-                    .toArray(function (err, docs) {
+                    .toArray(function(err, docs) {
                         if (err) {
                             reject(err);
                         }
-                        console.log(docs);
                         resolve(docs);
                     })
             })
-            .then((res) => {
+            .then(function(res) {
                 if (res.length) {
                     func.id = res[0].id + 1;
                 } else {
@@ -65,8 +62,7 @@ Func.prototype.save = function (callback) {
                 collection
                     .insert(func, {
                         safe: true
-                    }, function (err) {
-                        mongodb.close();
+                    }, function(err) {
                         if (err) {
                             return callback(err);
                         }
@@ -77,31 +73,52 @@ Func.prototype.save = function (callback) {
   })
 };
 
-Func.get = function (params, callback) {
-    mongodb.open(function (err, db) {
-        if (err) {
-            return callback(err);
-        }
-        // 读取funcs集合
-        db.collection('funcs', function (err, collection) {
+Func.prototype.deleteFuncByUuid = function(callback) {
+    const func = {
+        uuid: this.uuid
+    };
+    console.log(this.uuid);
+    console.log(222);
+    mongodb.then(function(db) {
+        db.collection('funcs', function(err, collection) {
             if (err) {
-                mongodb.close();
                 return callback(err);
             }
-            var query = {};
+            console.log(func);
+            console.log(111);
+            collection.remove({_id: func.uuid}, function(err) {
+                if (err) {
+                    return callback(err);
+                }
+                callback(null, '删除成功！');
+            });
+        });
+    });
+}
+
+Func.get = function(params, callback) {
+    mongodb.then(function(db) {
+        // 读取funcs集合
+        db.collection('funcs', function(err, collection) {
+            if (err) {
+                return callback(err);
+            }
+            const query = {};
             if (params.keyWord) {
                 query.$or = [
                     {
-                        name: params.keyWord
+                        funcName: params.keyWord
                     },
                     {
-                        key: params.keyWord
+                        funcKey: params.keyWord
                     },
                     {
-                        desc: params.keyWord
+                        funcDesc: params.keyWord
                     }
                 ];
             }
+            console.log(params);
+            console.log(query);
             Promise.all(
                 [
                     collection.count(true),
@@ -112,55 +129,34 @@ Func.get = function (params, callback) {
                         .skip(Number(params.currentPage))
                         .limit(Number(params.pageSize))
                         .toArray()
-            ]).then((res) => {
-                mongodb.close();
+            ]).then(function(res) {
                 callback(null, {
                     totalRow: res[0],
                     dataList: res[1]
                 });
-            }, (err) => {
-                mongodb.close();
+            }, function(err) {
                 callback(err);
             });
-            // 根据query对象查询文章
-            /*console.log(Number(params.pageSize));
-            collection.find(query)
-                .sort({
-                    _id: -1
-                })
-                .skip(2)
-                .limit(Number(params.pageSize))
-                .toArray(function (err, docs) {
-                mongodb.close();
-                if (err) {
-                    callback(err);
-                }
-                console.log(docs);
-                callback(null, docs);
-            });*/
-        })
-    })
+        });
+    });
 };
-Func.getAll = function (params, callback) {
-    mongodb.open(function (err, db) {
-        if (err) {
-            return callback(err);
-        }
-        db.collection('funcs', function (err, collection) {
+Func.getAll = function(params, callback) {
+    mongodb.then(function(db) {
+        db.collection('funcs', function(err, collection) {
             if (err) {
-                mongodb.close();
                 return callback(err);
             }
             collection.find()
                 .sort({
                     id: -1,
                 })
-                .toArray(function (err, docs) {
-                    mongodb.close();
+                .toArray(function(err, docs) {
                     if (err) {
                         callback(err);
                     }
-                    callback(null, docs);
+                    callback(null, {
+                        dataList: docs
+                    });
                 });
         });
     });

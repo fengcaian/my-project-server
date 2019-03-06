@@ -3,14 +3,14 @@ function Response(code, msg, data, totalRow, pageSize, currentPage) {
     this.code = code;
     this.msg = msg;
     if (totalRow) {
-        this.data = {
+        this.result = {
             dataList: data,
-            totalRow: totalRow,
-            pageSize: pageSize,
-            currentPage: currentPage
+            totalRow: Number(totalRow),
+            pageSize: Number(pageSize),
+            currentPage: Number(currentPage)
         }
     } else {
-        this.data = data;
+        this.result = data;
     }
 }
 module.exports = Response;
