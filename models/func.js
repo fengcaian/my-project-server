@@ -1,4 +1,4 @@
-const mongodb = require('./db');
+var mongodb = require('./db');
 
 function Func (func) {
     this.funcName = func.funcName;
@@ -7,15 +7,14 @@ function Func (func) {
     this.funcDesc = func.funcDesc;
     this.parentId = func.parentId;
     this._id = func._id;
-    this.uuid = func.uuid;
 }
 
 module.exports = Func;
  // 存储一篇文章及其信息
 Func.prototype.save = function(callback) {
-    const date = new Date();
-    const timestamp = Date.parse(date);
-    const time = {
+    var date = new Date();
+    var timestamp = Date.parse(date);
+    var time = {
         date: date,
         year: date.getFullYear(),
         month: date.getFullYear() + "-" + (date.getMonth() + 1),
@@ -24,7 +23,7 @@ Func.prototype.save = function(callback) {
         date.getHours() + ":" + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes())
     };
 
-    const func = { // 要存储的文档
+    var func = { // 要存储的文档
         id: 'func_id_' + timestamp,
         funcName: this.funcName,
         funcKey: this.funcKey,
@@ -34,7 +33,6 @@ Func.prototype.save = function(callback) {
         parentId: this.parentId
     };
 
-    // 打开数据库
     mongodb.then(function(db) {
         // 读取post集合
         db.collection('funcs', function(err, collection) {
@@ -73,25 +71,27 @@ Func.prototype.save = function(callback) {
   })
 };
 
-Func.prototype.deleteFuncByUuid = function(callback) {
-    const func = {
-        uuid: this.uuid
+Func.prototype.deleteFunc = function(callback) {
+    var func = {
+        _id: this._id
     };
-    console.log(this.uuid);
+    console.log(this._id);
     console.log(222);
     mongodb.then(function(db) {
         db.collection('funcs', function(err, collection) {
             if (err) {
+                console.log(err);
                 return callback(err);
             }
             console.log(func);
             console.log(111);
-            collection.remove({_id: func.uuid}, function(err) {
-                if (err) {
+            console.log(JSON.stringify({'_id': func._id}));
+            collection.remove({'_id': func._id})
+                .then((res) => {
+                    return callback(null, res);
+                }, function() {
                     return callback(err);
-                }
-                callback(null, '删除成功！');
-            });
+                });
         });
     });
 }
@@ -103,7 +103,7 @@ Func.get = function(params, callback) {
             if (err) {
                 return callback(err);
             }
-            const query = {};
+            var query = {};
             if (params.keyWord) {
                 query.$or = [
                     {
@@ -126,13 +126,13 @@ Func.get = function(params, callback) {
                         .sort({
                             id: -1
                         })
-                        .skip(Number(params.currentPage))
+                        .skip((Number(params.currentPage) - 1) * Number(params.pageSize))
                         .limit(Number(params.pageSize))
                         .toArray()
             ]).then(function(res) {
                 callback(null, {
                     totalRow: res[0],
-                    dataList: res[1]
+                    dataList: res[1] || []
                 });
             }, function(err) {
                 callback(err);

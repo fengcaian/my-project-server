@@ -34,6 +34,7 @@ module.exports = function(app) {
                 console.log(err);
                 res.end(err);
             }
+            console.log(result);
             res.end(JSON.stringify(new Response(200, null, result.dataList, result.totalRow, reqParams.pageSize, reqParams.currentPage)));
         });
     });
@@ -49,13 +50,13 @@ module.exports = function(app) {
         });
     });
 
-    app.post('/delete/func/by/uuid', checkNotLogin);
-    app.post('/delete/func/by/uuid', function(req, res) {
+    app.post('/delete/func', checkNotLogin);
+    app.post('/delete/func', function(req, res) {
         console.log(req.body);
-        if (req.body.uuid) {
+        if (req.body._id) {
             var func = new Func(req.body);
             console.log(func);
-            func.deleteFuncByUuid(function(err) {
+            func.deleteFunc(function(err, msg) {
                 if (err) {
                     res.end(err);
                 }
