@@ -85,7 +85,7 @@ Func.prototype.deleteFunc = function(callback) {
             }
             console.log(func);
             console.log(111);
-            console.log(JSON.stringify({'_id': func._id}));
+            console.log(JSON.stringify({'id': 'func_id_1550325466000'}));
             collection.remove({'_id': func._id})
                 .then((res) => {
                     return callback(null, res);
