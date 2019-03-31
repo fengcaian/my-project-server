@@ -1,4 +1,5 @@
 var mongodb = require('./db');
+var Base = require('./base');
 
 function Func (func) {
     this.funcName = func.funcName;
@@ -6,6 +7,7 @@ function Func (func) {
     this.urlList = func.urlList;
     this.funcDesc = func.funcDesc;
     this.parentId = func.parentId;
+    this.id = func.id;
     this._id = func._id;
 }
 
@@ -24,38 +26,31 @@ Func.prototype.save = function(callback) {
     };
 
     var func = { // 要存储的文档
-        id: 'func_id_' + timestamp,
+        funcId: 'func_id_' + timestamp,
         funcName: this.funcName,
         funcKey: this.funcKey,
         urlList: this.urlList,
         funcDesc: this.funcDesc,
         time: time,
-        parentId: this.parentId
+        parentId: Number(this.parentId)
     };
 
     mongodb.then(function(db) {
-        // 读取post集合
+        // 读取funcs集合
         db.collection('funcs', function(err, collection) {
             if (err) {
-                return callback(err);
+                callback(err);
             }
             new Promise(function(resolve, reject) {
-                collection
-                    .find()
-                    .sort({id: -1})
-                    .toArray(function(err, docs) {
-                        if (err) {
-                            reject(err);
-                        }
-                        resolve(docs);
-                    })
+                Base.getDocIds({docName: 'funcs'}, function (err, result) {
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve(result);
+                })
             })
             .then(function(res) {
-                if (res.length) {
-                    func.id = res[0].id + 1;
-                } else {
-                    func.id = 1;
-                }
+                func.id = res[res.length - 1].key; // 暂时考虑每次新增一个doc, 不考虑文档批量操作
                 // 将文档插入post集合
                 collection
                     .insert(func, {
@@ -66,6 +61,8 @@ Func.prototype.save = function(callback) {
                         }
                         callback(null, '保存成功！');
                     });
+            }, function (err) {
+                callback(err);
             });
         })
   })
@@ -73,9 +70,9 @@ Func.prototype.save = function(callback) {
 
 Func.prototype.deleteFunc = function(callback) {
     var func = {
-        _id: this._id
+        id: Number(this.id)
     };
-    console.log(this._id);
+    console.log(this.id);
     console.log(222);
     mongodb.then(function(db) {
         db.collection('funcs', function(err, collection) {
@@ -84,9 +81,8 @@ Func.prototype.deleteFunc = function(callback) {
                 return callback(err);
             }
             console.log(func);
-            console.log(111);
-            console.log(JSON.stringify({'id': 'func_id_1550325466000'}));
-            collection.remove({'_id': func._id})
+            console.log(JSON.stringify(func));
+            collection.remove(func)
                 .then((res) => {
                     return callback(null, res);
                 }, function() {
@@ -94,7 +90,7 @@ Func.prototype.deleteFunc = function(callback) {
                 });
         });
     });
-}
+};
 
 Func.get = function(params, callback) {
     mongodb.then(function(db) {

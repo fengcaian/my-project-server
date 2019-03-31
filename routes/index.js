@@ -16,13 +16,12 @@ module.exports = function(app) {
     app.post('/save/func', function(req, res) {
         console.log(req.body);
         var func = new Func(req.body);
+        console.log(typeof func.parentId);
         func.save(function(err) {
             if (err) {
-                req.flash('error', err);
-                return res.redirect('/');
+                res.end(JSON.stringify(new Response(500, err)));
             }
-            req.flash('success', '保存成功');
-            res.end();
+            res.end(JSON.stringify(new Response(200, null)));
         });
     });
 
@@ -34,7 +33,6 @@ module.exports = function(app) {
                 console.log(err);
                 res.end(err);
             }
-            console.log(result);
             res.end(JSON.stringify(new Response(200, null, result.dataList, result.totalRow, reqParams.pageSize, reqParams.currentPage)));
         });
     });
@@ -53,7 +51,7 @@ module.exports = function(app) {
     app.post('/delete/func', checkNotLogin);
     app.post('/delete/func', function(req, res) {
         console.log(req.body);
-        if (req.body._id) {
+        if (req.body.id) {
             var func = new Func(req.body);
             console.log(func);
             func.deleteFunc(function(err, msg) {
@@ -63,7 +61,7 @@ module.exports = function(app) {
                 res.end(JSON.stringify(new Response(200, null, null)));
             });
         } else {
-            res.end(JSON.stringify(new Response(500, 'uuid为空!', null)));
+            res.end(JSON.stringify(new Response(500, 'id为空!', null)));
         }
     });
 
