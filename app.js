@@ -19,7 +19,7 @@ app.use(session({
         /*db: settings.db,
         host: settings.host,
         port: settings.port*/ // connect-mongo0.8.2以后的版本不再使用这个连接策咯，使用只想mongoDB的url
-        url: 'mongodb://localhost/mps' //url:‘mongodb://localhost/’ + settings.db,
+        url: 'mongodb://localhost/' + settings.db // 'mongodb://localhost/mps'
     })
 }));
 app.use(flash());

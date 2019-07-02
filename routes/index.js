@@ -5,7 +5,6 @@ var crypto = require('crypto'),
 
 module.exports = function(app) {
     app.get('/', function(req, res) {
-        console.log(123);
         var data = {key: 'value', hello: 'world'};
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.send(JSON.stringify(data));
@@ -16,8 +15,35 @@ module.exports = function(app) {
     app.post('/save/func', function(req, res) {
         console.log(req.body);
         var func = new Func(req.body);
-        console.log(typeof func.parentId);
         func.save(function(err) {
+            if (err) {
+                res.end(JSON.stringify(new Response(500, err)));
+            }
+            res.end(JSON.stringify(new Response(200, null)));
+        });
+    });
+
+    app.get('/modify/func/init', checkNotLogin);
+    app.get('/modify/func/init', function(req, res) {
+        var reqParams = url.parse(req.url, true).query;
+        Func.getFuncById(reqParams, function(err, result) {
+            if (err) {
+                res.end(err);
+            }
+            var obj = {
+                id: result.id,
+                funcName: result.funcName,
+                funcDesc: result.funcDesc,
+                parentId: result.parentId
+            };
+            res.end(JSON.stringify(new Response(200, null, obj)));
+        });
+    });
+
+    app.post('/modify/func', checkNotLogin);
+    app.post('/modify/func', function(req, res) {
+        var func = new Func(req.body);
+        func.update(function(err) {
             if (err) {
                 res.end(JSON.stringify(new Response(500, err)));
             }
@@ -50,10 +76,8 @@ module.exports = function(app) {
 
     app.post('/delete/func', checkNotLogin);
     app.post('/delete/func', function(req, res) {
-        console.log(req.body);
         if (req.body.id) {
             var func = new Func(req.body);
-            console.log(func);
             func.deleteFunc(function(err, msg) {
                 if (err) {
                     res.end(err);

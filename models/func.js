@@ -68,20 +68,39 @@ Func.prototype.save = function(callback) {
   })
 };
 
+Func.prototype.update = function(callback) {
+    var id = this.id;
+    var set = {
+        funcName: this.funcName,
+        funcDesc: this.funcDesc
+    };
+    mongodb.then(function(db) {
+        db.collection('funcs', function(err, collection) {
+            if (err) {
+                callback(err);
+            }
+            collection.update(
+                {id: Number(id)},
+                {$set: set},
+                {safe: true}, function(err) {
+                    if (err) {
+                        callback(err);
+                    }
+                    callback(null);
+                });
+        });
+    });
+}
+
 Func.prototype.deleteFunc = function(callback) {
     var func = {
         id: Number(this.id)
     };
-    console.log(this.id);
-    console.log(222);
     mongodb.then(function(db) {
         db.collection('funcs', function(err, collection) {
             if (err) {
-                console.log(err);
                 return callback(err);
             }
-            console.log(func);
-            console.log(JSON.stringify(func));
             collection.remove(func)
                 .then((res) => {
                     return callback(null, res);
@@ -113,8 +132,6 @@ Func.get = function(params, callback) {
                     }
                 ];
             }
-            console.log(params);
-            console.log(query);
             Promise.all(
                 [
                     collection.count(true),
@@ -136,6 +153,27 @@ Func.get = function(params, callback) {
         });
     });
 };
+Func.getFuncById = function(params, callback) {
+    mongodb.then(function(db) {
+        db.collection('funcs', function(err, collection) {
+            if (err) {
+                return callback(err);
+            }
+            if (!params.id) {
+                return callback('id不存在！');
+            }
+            var query = {
+                id: Number(params.id)
+            };
+            collection.findOne(query, function(error, result) {
+                if (error) {
+                    return callback(error);
+                }
+                callback(null, result);
+            })
+        });
+    });
+}
 Func.getAll = function(params, callback) {
     mongodb.then(function(db) {
         db.collection('funcs', function(err, collection) {

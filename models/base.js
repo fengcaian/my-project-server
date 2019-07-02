@@ -9,15 +9,6 @@ function Base(name, id) {
 }
 module.exports = Base;
 
-/*Base.prototype.save = function (callback) {
-    var date = new Date();
-    var base = {
-        date: date,
-        collectionName: this.collectionName,
-        keyList: this.keyList,
-    };
-};*/
-
 Base.getDocIds = function (params, callback) {
     mongodb.then(function(db) {
         // 读取base集合
